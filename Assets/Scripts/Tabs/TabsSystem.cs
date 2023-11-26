@@ -1,12 +1,12 @@
 ﻿using UnityEngine;
 using Views;
 
-namespace DefaultNamespace
+namespace Tabs
 {
-    public class TabSystem : MonoBehaviour
+    public class TabsSystem : MonoBehaviour
     {
         [SerializeField] private Tab[] _tabButtons;
-        [SerializeField] private ViewController _viewController;
+        [SerializeField] private ViewsController viewsController;
         
         private EViewType currentTab;
 
@@ -42,7 +42,7 @@ namespace DefaultNamespace
             {
                 if (_tabButtons[i].ViewType == eViewType)
                 {
-                    _viewController.OpenView(eViewType);
+                    viewsController.OpenView(eViewType);
                     _tabButtons[i].ChangeInteractable(false);
                 }
                 else

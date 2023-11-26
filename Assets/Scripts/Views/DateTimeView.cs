@@ -1,4 +1,7 @@
-﻿using TMPro;
+﻿using System.Collections;
+using System.Text;
+using System.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 
 namespace Views
@@ -7,14 +10,38 @@ namespace Views
     {
         [SerializeField] private TextMeshProUGUI _timeText;
 
-        private void Start()
+        private readonly StringBuilder _stringBuilder = new();
+
+        private void OnEnable()
         {
-            InvokeRepeating("UpdateTimeText", 0f, 1f);
+            StartCoroutine(SetDateTime());
         }
 
-        private void UpdateTimeText()
+        private IEnumerator SetDateTime()
         {
-            _timeText.text = System.DateTime.Now.ToString("HH:mm:ss");
+            while (!IsActualDate())
+            {
+                UpdateDateTime();
+
+                yield return new WaitForSeconds(1);
+            }
+        }
+
+        private void UpdateDateTime()
+        {
+            _stringBuilder.Clear();
+            _stringBuilder.AppendFormat(GetActualDateTime());
+            _timeText.SetText(_stringBuilder.ToString());
+        }
+
+        private bool IsActualDate()
+        {
+            return _timeText.text == GetActualDateTime();
+        }
+
+        private string GetActualDateTime()
+        {
+            return System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
         }
     }
 }

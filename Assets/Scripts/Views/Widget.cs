@@ -8,18 +8,18 @@ namespace Views
         [SerializeField] private WidgetElement _widgetElement;
 
         private Dictionary<int, WidgetElement> _widgetElements = new();
-        private int _spacing = 25;
+        [SerializeField] private int _spacing = 10;
 
         public Dictionary<int, WidgetElement> WidgetElements => _widgetElements;
 
         public void Initialize(List<WidgetElementData> widgetElementData, int count)
         {
-            var heightWidgetElement = GetHeightWidgetElement();
+            var heightWidgetElement = GetRectWidgetElement();
             for (int i = 0; i < count; i++)
             {
                 var widget = Instantiate(_widgetElement, transform);
                 widget.SetData(widgetElementData[i]);
-                
+
                 _widgetElements.Add(i, widget);
                 SetWidgetPosition(widget, heightWidgetElement, i);
             }
@@ -30,7 +30,7 @@ namespace Views
             widget.transform.localPosition = Vector3.down * heightWidgetElement * i;
         }
 
-        private int GetHeightWidgetElement()
+        public int GetRectWidgetElement()
         {
             var rectWidget = _widgetElement.transform as RectTransform;
 

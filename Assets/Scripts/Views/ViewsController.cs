@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Views
 {
-    public class ViewController : MonoBehaviour
+    public class ViewsController : MonoBehaviour
     {
         [SerializeField] private List<View> _views;
 

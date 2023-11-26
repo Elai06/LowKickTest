@@ -1,83 +1,110 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using Utils;
 
 namespace Views
 {
     public class ScrollView : View
     {
         [SerializeField] private Widget _widget;
+        [SerializeField] private ScrollList _scrollList;
         [SerializeField] private int _widgetCounts = 10;
         [SerializeField] private int _widgetElementsDataCount = 1000;
-        [SerializeField] private int _scrollingSpeed = 1;
 
-        private int _startMousePos;
+        private List<WidgetElementData> _widgetElementsData = new();
 
-        private List<WidgetElementData> _widgetElementsData = new List<WidgetElementData>();
+        private List<Sprite> _sprites = new();
 
         private void Start()
         {
-            CreateElementsData();
+            LoadSprites();
 
+            CreateElementsData();
             _widget.Initialize(_widgetElementsData, _widgetCounts);
+            _scrollList.Initialize(_widget, _widget.GetRectWidgetElement(), _widgetElementsDataCount);
+        }
+
+        private void LoadSprites()
+        {
+            for (int i = 0; i < _widgetCounts; i++)
+            {
+                _sprites.Add(GetRandomSprite());
+            }
+        }
+
+        private void OnEnable()
+        {
+            _scrollList.UpdateLowerElement += OnUpdateLowerElement;
+            _scrollList.UpdateUpperElement += OnUpdateUpperElement;
+        }
+
+        private void OnDisable()
+        {
+            _scrollList.UpdateLowerElement -= OnUpdateLowerElement;
+            _scrollList.UpdateUpperElement -= OnUpdateUpperElement;
+        }
+
+        private void OnUpdateLowerElement(WidgetElement scrollElement)
+        {
+            var lastIndex = GetLastIndex();
+            var data = _widgetElementsData[lastIndex + 1];
+            scrollElement.SetData(data);
+        }
+
+        private void OnUpdateUpperElement(WidgetElement scrollElement)
+        {
+            var firstIndex = GetFirstIndex();
+            var data = _widgetElementsData[firstIndex - 1];
+            scrollElement.SetData(data);
         }
 
         private void CreateElementsData()
         {
             for (int i = 0; i < _widgetElementsDataCount; i++)
             {
+                var sprite = _sprites[i % _sprites.Count];
                 _widgetElementsData.Add(new WidgetElementData
                 {
                     Name = i.ToString(),
-                    Index = i
+                    Index = i,
+                    Sprite = sprite
                 });
             }
         }
 
-        private void FixedUpdate()
+        private Sprite GetRandomSprite()
         {
-            if (Input.GetMouseButtonDown(0))
+            var texture = ImageLoader.LoadImage();
+
+            if (texture == null)
             {
-                _startMousePos = (int)Input.mousePosition.y;
+                return null;
             }
 
-            if (Input.GetMouseButton(0))
+            return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.one * 0.5f);
+        }
+
+        private int GetLastIndex()
+        {
+            return _widget.WidgetElements.Values
+                .Select(widgetWidgetElement => widgetWidgetElement.GetIndex())
+                .Prepend(0).Max();
+        }
+
+        private int GetFirstIndex()
+        {
+            int index = _widget.WidgetElements[0].GetIndex();
+            foreach (var widgetElement in _widget.WidgetElements.Values)
             {
-                if (_startMousePos != (int)Input.mousePosition.y)
+                var widgetIndex = widgetElement.GetIndex();
+                if (index > widgetIndex)
                 {
-                    var delta = (int)Input.mousePosition.y - _startMousePos;
-                    
-                    if (delta > 0)
-                    {
-                        Scroll(_scrollingSpeed);
-                    }
-                    else
-                    {
-                        Scroll(-_scrollingSpeed);
-                    }
-                    
-                    _startMousePos = (int)Input.mousePosition.y;
+                    index = widgetIndex;
                 }
             }
 
-            if (Input.GetMouseButtonUp(0))
-            {
-                _startMousePos = 0;
-            }
-        }
-
-        private void Scroll(int deltaMousePosition)
-        {
-            for (int i = 0; i < _widget.WidgetElements.Count; i++)
-            {
-                var widgetElement = _widget.WidgetElements[i];
-
-                var updateIndex = deltaMousePosition + widgetElement.GetIndex();
-
-                if (updateIndex < 0 || updateIndex >= _widgetElementsData.Count) return;
-
-                widgetElement.UpdateData(_widgetElementsData[updateIndex]);
-            }
+            return index;
         }
     }
 }
